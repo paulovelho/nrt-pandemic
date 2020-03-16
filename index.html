@@ -1,68 +1,53 @@
+<!--
+Author : Atul Pandit
+Email : atul_pandit@yahoo.com / atul.pandit@gmail.com
+-->
+<!-- 
+DEMO LINK
+http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
+-->
 <!DOCTYPE html>
-<html lang="pt-br">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>nRT | Epidemic Simulator</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>nRT - Pandemic Simulator</title>
+	<script src="https://d3js.org/d3.v3.min.js"></script>
 
-	<!-- SHARING META -->
-	<meta property="og:type" content="website"/>
-	<meta property="og:title" content="nRT: Epidemic Simulator"/>
-	<meta property="og:description" content="Simulador de epidemias nRT"/>
-	<meta property="og:site_name" content="nRT"/>
-	<meta property="og:url" content="http://nrt.paulovelho.com.br/play/epidemic/"/>
-	<meta property="og:image" content="http://nrt.paulovelho.com.br/play/epidemic/images/cover.jpg"/>
-	<meta property="twitter:image" content="http://nrt.paulovelho.com.br/play/epidemic/images/cover.jpg"/>
-	<meta property="twitter:card" content="summary"/>
-	<meta property="twitter:site" content="nRT"/>
-	<meta property="twitter:title" content="nRT: Epidemic Simulator"/>
-	<meta property="twitter:description" content="Simulador de epidemias nRT"/>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
-	<link href='css/bootstrap.min.css' rel='stylesheet'>
 	<link href='css/style.css' rel='stylesheet'>
-	<link href='css/animations.css' rel='stylesheet'>
 
 </head>
+<body>
 
-<body ng-app="nrt-pandemic">
-
-  <div class="container" ng-controller="whoController">
+  <div class="container">
     <div class="row">
-    	<div class="col-8">
-    		<div id="city" ng-class="animate">
-    			<div ng-repeat="r in map">
-						<span 
-							ng-repeat="person in r" 
-							class="person" 
-							ng-class="[person.status, {0:'row-even', 1:'row-odd'}[ $parent.$index % 2 ], {0:'col-even', 1:'col-odd'}[ $index % 2 ]]"
-						></span>
-    			</div>
-    		</div>
+    	<div class="col-sm-10">
+				<div id="mainDiv" style="width:800px; height:600px">
+					<div id="drawAreaOuter" style="width:100%; height:100%;  ">
+						<div id="drawArea" style="width:100%; height:100%;"></div>
+					</div>
+				</div>
     	</div>
 
-    	<div class="col-4">
-				<button ng-click="play();">test</button><br/><br/>
-				<button ng-click="moveup();">up</button>
-				<button ng-click="movedown();">down</button>
-				<button ng-click="moveleft();">left</button>
-				<button ng-click="moveright();">right</button>
-    	</div>
-    </div>
-  </div>
+    	<div class="col-sm-2">
+				<div id="controlPanel">
+					<button onclick="pandemic.StartStopGame();">&#9658;</button>
+				</div>
+				<br/>
+				<div id="data">
+					Infectados: <span id="infectCount"></span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+<script type="text/javascript" src="js/person.js"></script>
+<script type="text/javascript" src="js/who.js"></script>
+<script>
+	var pandemic = new who();
+	var svg = pandemic.Initialize();
+</script>
 
 </body>
-
-	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
-	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-animate.js"></script>
-
-	<script type='text/javascript' src='js/lib/jquery.min.js'></script>
-	<script type='text/javascript' src='js/lib/bootstrap.min.js'></script>
-
-	<script type='text/javascript' src='js/person.js'></script>
-
-	<script type='text/javascript' src='js/app.js'></script>
-	<script type='text/javascript' src='js/who.js'></script>
-
-
-
 </html>

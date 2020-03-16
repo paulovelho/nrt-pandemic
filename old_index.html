@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+	<title>nRT | Epidemic Simulator</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- SHARING META -->
+	<meta property="og:type" content="website"/>
+	<meta property="og:title" content="nRT: Epidemic Simulator"/>
+	<meta property="og:description" content="Simulador de epidemias nRT"/>
+	<meta property="og:site_name" content="nRT"/>
+	<meta property="og:url" content="http://nrt.paulovelho.com.br/play/epidemic/"/>
+	<meta property="og:image" content="http://nrt.paulovelho.com.br/play/epidemic/images/cover.jpg"/>
+	<meta property="twitter:image" content="http://nrt.paulovelho.com.br/play/epidemic/images/cover.jpg"/>
+	<meta property="twitter:card" content="summary"/>
+	<meta property="twitter:site" content="nRT"/>
+	<meta property="twitter:title" content="nRT: Epidemic Simulator"/>
+	<meta property="twitter:description" content="Simulador de epidemias nRT"/>
+
+	<link href='css/bootstrap.min.css' rel='stylesheet'>
+	<link href='css/style.css' rel='stylesheet'>
+	<link href='css/animations.css' rel='stylesheet'>
+
+</head>
+
+<body ng-app="nrt-pandemic">
+
+  <div class="container" ng-controller="whoController">
+    <div class="row">
+    	<div class="col-8">
+    		<div id="city" ng-class="animate">
+					<span 
+						ng-repeat="person in population"
+						class="person" 
+						ng-class="[person.status]"
+						id="p-{{person.id}}"
+					></span>
+    		</div>
+    	</div>
+
+    	<div class="col-4">
+				<button ng-click="play();">test</button><br/><br/>
+				<button ng-click="moveup();">up</button>
+				<button ng-click="movedown();">down</button>
+				<button ng-click="moveleft();">left</button>
+				<button ng-click="moveright();">right</button>
+    	</div>
+    </div>
+  </div>
+
+</body>
+
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-animate.js"></script>
+
+	<script type='text/javascript' src='js/lib/jquery.min.js'></script>
+	<script type='text/javascript' src='js/lib/bootstrap.min.js'></script>
+
+	<script type='text/javascript' src='js/person.js'></script>
+
+	<script type='text/javascript' src='js/app.js'></script>
+	<script type='text/javascript' src='js/who.js'></script>
+
+
+
+</html>
