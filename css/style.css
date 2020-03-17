@@ -13,3 +13,9 @@
 	width: 150px;
 	height: 200px;
 }
+#data {
+	padding: 10px;
+	border: 1px solid #EEE;
+	font-size: 12px;
+	width: 200px;
+}

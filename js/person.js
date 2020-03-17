@@ -13,6 +13,7 @@ function Person(svg, x, y, id, aoa) {
 
 	this.status = "n";
 	// n = "normal" | i = "infected" | d = "dead" | c = "cure"
+	this.infectionSpread = 0;
 	this.ticksSinceInfection = 0;
 	this.moving = true;
 
@@ -38,6 +39,24 @@ function Person(svg, x, y, id, aoa) {
 				return '#66ccff';
 		}
 	}
+	this.getStatusStr = () => {
+		switch(this.status) {
+			case "i":
+				return "infectado";
+			case "c":
+				return "curado";
+			case "d":
+				return "morto";
+			case "n":
+				if(this.moving) {
+					return "vivo e zanzando";
+				} else {
+					return "vivo e parado";
+				}
+			default:
+				return '#66ccff';
+		}
+	}
 
 	this.infect = () => {
 		this.status = "i";
@@ -59,33 +78,18 @@ function Person(svg, x, y, id, aoa) {
 	}
 
 
-	// wip
-	this.diseaseProgression = () => {
-		this.ticksSinceInfection ++;
-		if(this.ticksSinceInfection < 500) return false;
-		if(this.ticksSinceInfection % 10 != 0) return false; // when to check?
-		if(this.ticksSinceInfection > 1200) {
-			console.info("killing", this);
-			this.die();
-			return false;
-		}
-		let chance = (this.ticksSinceInfection/100 - 45) / 100;
-		if(this.probability(chance)) {
-			this.cure();
-		}
-
-	}
-
-
-
-	this.probability = (n) => {
-		return Math.random() < n;
-	}
-
-
 	// technical functions:
 	this.getBall = () => {
 		return this.svg.selectAll('#' + this.id).data(this.data);
+	}
+
+	this.getInfo = () => {
+		return `<b>${this.id}</b><br/>
+			<i style="color: ${this.getColor()}">${this.getStatusStr()}</i><br/>
+			<p>R0 = ${this.infectionSpread} | em ${this.ticksSinceInfection} ticks</p>`;
+	}
+	this.showInfo = () => {
+		document.getElementById("data-debug").innerHTML = this.getInfo();
 	}
 
 	this.Draw = () => {
@@ -94,14 +98,12 @@ function Person(svg, x, y, id, aoa) {
 			.append("circle")
 			.attr({"id" : this.id, 'class' : 'ball', 'r' : this.radius, 'weight' : this.weight})
 			.style("fill", this.getColor())
-			.on("click", () => {
-				console.info("clicked on ", this);
-			});
+			.on("click", this.showInfo);
 		ball.attr("cx", this.posX).attr("cy", this.posY);
 	}
 
 	this.Move = function () {
-//		this.diseaseProgression();
+		if(this.status == "i") this.ticksSinceInfection ++;
 		if(!this.moving) {
 			return true;
 		}

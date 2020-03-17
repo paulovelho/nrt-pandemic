@@ -5,7 +5,23 @@ var who = function() {
 	this.svg = null;
 	this.population = []; // global array representing balls
 
-	this.infected = 1;
+	// data
+	this.infected = 0;
+	this.dead = 0;
+	this.cured = 0;
+
+	// control panel:
+	this.mortality = 0.05;
+	this.cureChance = 0.2;
+	this.hospitalCapacity = 30;
+	this.quarantineLevel = 0.1;
+
+	// r:
+	this.rArr = [];
+	this.r0 = 0;
+
+	this.hospitalUse = 0;
+	this.running = false;
 
 
 	this.CheckCollision = (ball1, ball2) => {
@@ -20,23 +36,6 @@ var who = function() {
 			return true;
 		}
 		return false;
-	}
-
-
-	this.transmit = (sick, healthy) => {
-		healthy.infect();
-		this.infected++;
-	}
-
-	this.processStatus = (p1, p2) => {
-		if( p1.status == p2.status ) return true;
-		if( p1.status == "i" && p2.status == "n" ){
-			this.transmit(p1, p2);
-		}
-		if( p2.status == "i" && p1.status == "n" ){
-			this.transmit(p2, p1);
-		}
-		document.getElementById("infectCount").innerHTML = this.infected;
 	}
 
 	this.StaticCollision = (static, moving) => {
@@ -93,34 +92,107 @@ var who = function() {
 				ball2.posY += ball2.vy;
 			}
 
-			this.processStatus(ball1, ball2);
+			this.collisionStatus(ball1, ball2);
 
 			ball1.Draw();
 			ball2.Draw();
 		}
 	}
 
-	this.startStopFlag = null;
 	this.tick = () => {
 		for (var i = 0; i < this.population.length; ++i) {
 			this.population[i].Move();
 			for (var j = i + 1; j < this.population.length; ++j) {
 				this.ProcessCollision(i, j);
 			}
+			this.processStatus(this.population[i]);
 		}
-		if (this.startStopFlag == null)
-			return true;
-		else
-			return false;
+		this.updateData();
+		if(this.infected == 0) return true;
+		return !this.running; // return true to stop
 	}
 
+	this.stop = () => {
+		this.running = false;
+	}
+	this.start = () => {
+		d3.timer(this.tick, 500);
+		this.running = true;
+	}
 	this.StartStopGame = () => {
-		if (this.startStopFlag == null) {
-			d3.timer(this.tick, 500);
-			this.startStopFlag = 1;
-		} else {
-			this.startStopFlag = null;
+		if(this.running) this.stop();
+		else this.start();
+	}
+
+
+
+	// process status:
+
+	this.transmit = (sick, healthy) => {
+		healthy.infect();
+		sick.infectionSpread++;
+		this.infected++;
+	}
+
+	this.collisionStatus = (p1, p2) => {
+		if( p1.status == p2.status ) return true;
+		if( p1.status == "i" && p2.status == "n" ){
+			this.transmit(p1, p2);
 		}
+		if( p2.status == "i" && p1.status == "n" ){
+			this.transmit(p2, p1);
+		}
+	}
+
+	this.processStatus = (person) => {
+		if(person.status != "i") return;
+		this.rArr[person.id] = person.infectionSpread;
+
+		let ticks = person.ticksSinceInfection;
+		if(ticks < 500) return false;
+		if(ticks % 10 != 0) return false; // when to check?
+
+		let chanceToDie = 0;
+		if( this.hospitalUse < 0.75 ) {
+			chanceToDie = this.hospitalUse * this.mortality;
+		} else {
+			chanceToDie = this.hospitalUse * this.mortality * 2;
+		}
+//		console.info("chance of " + person.id + " to die: ", chanceToDie);
+		if(this.probability(chanceToDie)) {
+			this.infected --;
+			this.dead ++;
+			person.die();
+		}
+
+		let chanceToCure = ( ticks / 10 - 45) / 100 * this.cureChance;
+
+		if(this.probability(chanceToCure)) {
+			this.infected --;
+			this.cured ++;
+			person.cure();
+		}		
+	}
+
+
+
+
+
+
+	// data
+	this.updateData = () => {
+		document.getElementById("infectCount").innerHTML = this.infected;
+		document.getElementById("deathCount").innerHTML = this.dead;
+		document.getElementById("cureCount").innerHTML = this.cured;
+
+		let zeroArray = Object.values(this.rArr);
+		let rzero = zeroArray.reduce((a,b) => a + b, 0) / zeroArray.length;
+		document.getElementById("rzero").innerHTML = rzero.toFixed(2);
+
+		document.getElementById("mortality").innerHTML = (this.mortality * 100) + "%";
+		let hospitalCapacityPerson = 200 * this.hospitalCapacity / 100;
+		this.hospitalUse = this.infected / hospitalCapacityPerson;
+		document.getElementById("hospitalUse").innerHTML = Math.round(this.hospitalUse * 100) + "%";
 	}
 
 
@@ -133,12 +205,17 @@ var who = function() {
 	this.probability = (n) => {
 		return Math.random() < n;
 	}
+	this.arrAverage = (arr) => {
+		if(arr.length == 0) return 0;
+		return arr.map(i => arr[i]).reduce((a,b) => a + b, 0) / arr.length;
+	}
 
 
 	// setup
 	this.infectRandom = () => {
 		let rand = this.getRandom(199);
 		this.population[rand-1].infect();
+		this.infected ++;
 	}
 
 	this.populate = () => {
@@ -152,7 +229,7 @@ var who = function() {
 				let h = minh + this.getRandom(60);
 				let w = (i-1) * 40 + this.getRandom(25);
 				let p = new Person(this.svg, w+5, h, 'n' + (i + pid), this.getRandom(360));
-				if(this.probability(0.50)) p.quarantine();
+				if(this.probability(this.quarantineLevel)) p.quarantine();
 				this.population.push(p);
 			}
 		}
@@ -215,6 +292,13 @@ var who = function() {
 
 		this.populate();
 		this.keyboard();
+
+		this.updateData();
+
+		window.onbeforeunload = function (e) {
+			this.stop();
+		};
+
 		return this.svg;
 	}
 
