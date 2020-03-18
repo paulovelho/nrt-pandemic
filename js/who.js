@@ -133,7 +133,10 @@ var who = function() {
 
 	// process status
 	this.transmit = (sick, healthy) => {
-		healthy.infect();
+		if(this.incubationPeriod == 0)
+			healthy.sick();
+		else
+			healthy.infect();
 		sick.infectionSpread++;
 		this.infected++;
 	}
