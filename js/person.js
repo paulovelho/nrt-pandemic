@@ -12,9 +12,9 @@ function Person(svg, x, y, id, aoa) {
 	this.radius = this.weight;
 
 	this.status = "n";
-	// n = "normal" | i = "infected" | "s" = "sick" | d = "dead" | c = "cure"
+	// n = "normal" | i = "infected" | a = "assintomatico" | "s" = "sick" | d = "dead" | c = "cure"
 	this.infectionSpread = 0;
-	this.ticksSinceInfection = 0;
+	this.ticksSinceStatus = 0;
 	this.moving = true;
 
 	this.willDie = false;
@@ -32,6 +32,9 @@ function Person(svg, x, y, id, aoa) {
 	this.getColor = () => {
 		switch(this.status) {
 			case "i":
+			case "a":
+				return "#F9F";
+			case "s":
 				return "red";
 			case "c":
 				return "green";
@@ -46,6 +49,10 @@ function Person(svg, x, y, id, aoa) {
 		switch(this.status) {
 			case "i":
 				return "infectado";
+			case "a":
+				return "assintomático";
+			case "s":
+				return "doente";
 			case "c":
 				return "curado";
 			case "d":
@@ -61,9 +68,18 @@ function Person(svg, x, y, id, aoa) {
 		}
 	}
 
+	this.canInfect = () => {
+		return ( this.status == "i" || this.status == "s" );
+	}
 	this.infect = () => {
 		this.status = "i";
 		this.getBall().style("fill", this.getColor());
+		this.ticksSinceStatus = 0;
+	}
+	this.sick = () => {
+		this.status = "s";
+		this.getBall().style("fill", this.getColor());
+		this.ticksSinceStatus = 0;
 	}
 	this.cure = () => {
 		this.status = "c";
@@ -89,7 +105,7 @@ function Person(svg, x, y, id, aoa) {
 	this.getInfo = () => {
 		return `<b>${this.id}</b><br/>
 			<i style="color: ${this.getColor()}">${this.getStatusStr()}</i><br/>
-			<p>R0 = ${this.infectionSpread} | em ${this.ticksSinceInfection} ticks</p>`;
+			<p>R0 = ${this.infectionSpread} | em ${this.ticksSinceStatus} ticks</p>`;
 	}
 	this.showInfo = () => {
 		document.getElementById("data-debug").innerHTML = this.getInfo();
@@ -106,7 +122,7 @@ function Person(svg, x, y, id, aoa) {
 	}
 
 	this.Move = function () {
-		if(this.status == "i") this.ticksSinceInfection ++;
+		if(this.status == "i" || this.status == "s") this.ticksSinceStatus ++;
 		if(!this.moving) {
 			return true;
 		}

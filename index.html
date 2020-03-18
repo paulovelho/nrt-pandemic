@@ -1,16 +1,9 @@
-<!--
-Author : Atul Pandit
-Email : atul_pandit@yahoo.com / atul.pandit@gmail.com
--->
-<!-- 
-DEMO LINK
-http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
--->
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>nRT - Pandemic Simulator</title>
-	<script src="https://d3js.org/d3.v3.min.js"></script>
+	<title>nRT | Pandemic Simulator</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">	<script src="https://d3js.org/d3.v3.min.js"></script>
 
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
@@ -37,6 +30,8 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 					<input type="range" class="slider" id="hospital" min="20" max="100" oninput="hospitalUpdate(this.value)"><br/><br/>
 					<span>Nível de quarentena: </span><span id="quarantineLevel">0%</span>
 					<input type="range" class="slider" id="quarantine" min="0" max="70" oninput="quarantineUpdate(this.value)"><br/><br/>
+					<span>Incubação: </span><span id="incubationLevel"></span>
+					<input type="range" class="slider" id="incubation" min="0" max="14" oninput="incubationUpdate(this.value)"><br/><br/>
 					<button class="reset" id="btn-reset" onclick="reset()">&#8635; Novo teste</button>
 
 					<hr/>

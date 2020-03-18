@@ -33,7 +33,7 @@
   cursor: pointer;
 }
 .slider:disabled::-moz-range-thumb {
-	background-color: #CCC;
+  background-color: #CCC;
 }
 .slider:disabled::-webkit-slider-thumb {
 	background-color: #CCC;
@@ -66,3 +66,9 @@ button:disabled {
 	font-size: 12px;
 	width: 250px;
 }
+#data-debug {
+  padding: 10px;
+  font-size: 12px;
+  width: 250px;
+}
+

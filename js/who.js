@@ -5,6 +5,8 @@ var who = function() {
 	this.svg = null;
 	this.population = []; // global array representing balls
 
+	// 1 day = 50 ticks
+	this.ticksPerDay = 50;
 	this.tickCount = 0;
 
 	// data
@@ -14,7 +16,8 @@ var who = function() {
 
 	// control panel:
 	this.mortality = 0.05;
-	this.cureChance = 0.75;
+	this.cureChance = 0;
+	this.incubationPeriod = 3;
 	this.hospitalCapacity = 0;
 	this.quarantineLevel = 0;
 
@@ -137,24 +140,42 @@ var who = function() {
 
 	this.collisionStatus = (p1, p2) => {
 		if( p1.status == p2.status ) return true;
-		if( p1.status == "i" && p2.status == "n" ){
+		if( p1.canInfect() && p2.status == "n" ){
 			this.transmit(p1, p2);
 		}
-		if( p2.status == "i" && p1.status == "n" ){
+		if( p2.canInfect() && p1.status == "n" ){
 			this.transmit(p2, p1);
 		}
 	}
 
 	this.processStatus = (person) => {
-		if(person.status != "i") return;
-
-		let ticks = person.ticksSinceInfection;
-		if(ticks < 500) return false;
+		let ticks = person.ticksSinceStatus;
 		if(ticks % 50 != 0) return false; // when to check?
 
 		this.rArr[person.id] = person.infectionSpread;
 
-		this.hospitalize(person, ticks);
+		if( person.status == "i" ) {
+			if( this.progressDisesase(person, ticks) )
+				person.sick();
+		}
+		if( person.status == "s" ) {
+			if(ticks < 500) return false;	
+			this.hospitalize(person, ticks);
+		}
+	}
+	this.progressDisesase = (person, ticks) => {
+		if(this.incubationPeriod == 0) return true;
+		let daysSinceDisease = ticks / this.ticksPerDay;
+		if( daysSinceDisease < this.incubationPeriod ) {
+			return this.probability(0.2);
+		}
+		if(daysSinceDisease > 4){
+			person.status = "a";
+			return false;
+		}
+		let chanceToProgress = 0.5 + daysSinceDisease * 0.1;
+		console.info("chance of " + person.id + " to get sick = " + chanceToProgress);
+		return this.probability(chanceToProgress);
 	}
 	this.hospitalize = (person, ticks) => {
 		if( this.hospitalUse > 1 ) {
@@ -203,7 +224,7 @@ var who = function() {
 		}
 	}
 	this.updateData = () => {
-		document.getElementById("day").innerHTML = Math.round(this.tickCount / 50);
+		document.getElementById("day").innerHTML = Math.round(this.tickCount / this.ticksPerDay);
 		document.getElementById("infectCount").innerHTML = this.infected;
 		document.getElementById("deathCount").innerHTML = this.dead;
 		document.getElementById("cureCount").innerHTML = this.cured;

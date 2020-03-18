@@ -13,10 +13,17 @@ function hospitalUpdate(val) {
 	document.getElementById("hospitalLevel").innerHTML = val + "%";
 	pandemic.hospitalCapacity = val/100;
 }
+function incubationUpdate(val) {
+	document.getElementById("incubation").value = val;
+
+	document.getElementById("incubationLevel").innerHTML = val + " dias";
+	pandemic.incubationPeriod = val;
+}
 
 function disabled(val) {
 	document.getElementById("quarantine").disabled = val;
 	document.getElementById("hospital").disabled = val;
+	document.getElementById("incubation").disabled = val;
 	document.getElementById("btn-reset").disabled = val;
 	document.getElementById("btn-play").disabled = !val;
 	setupVisible = !val;
@@ -55,6 +62,7 @@ function reset() {
 function OhNoes() {
 	quarantineUpdate(0);
 	hospitalUpdate(40);
+	incubationUpdate(4)
 	pandemic.Initialize();
 }
 
