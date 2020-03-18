@@ -30,11 +30,24 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     	</div>
 
     	<div class="col-sm-2">
+
 				<div id="controlPanel">
-					<button onclick="pandemic.StartStopGame();">&#9658;</button>
+
+					<span>Capacidade hospitalar: </span><span id="hospitalLevel">30%</span>
+					<input type="range" class="slider" id="hospital" min="20" max="100" oninput="hospitalUpdate(this.value)"><br/><br/>
+					<span>Nível de quarentena: </span><span id="quarantineLevel">0%</span>
+					<input type="range" class="slider" id="quarantine" min="0" max="70" oninput="quarantineUpdate(this.value)"><br/><br/>
+					<button class="reset" id="btn-reset" onclick="reset()">&#8635; Novo teste</button>
+
+					<hr/>
+					<button class="play-pause" id="btn-play" onclick="playPause()">&#9658; Vai!</button>
 				</div>
+
+
 				<br/>
 				<div id="data">
+					Dia: <span id="day"></span><br/>
+					<hr/>
 					Infectados: <span id="infectCount"></span><br>
 					Mortos: <span id="deathCount"></span><br>
 					Curados: <span id="cureCount"></span><br>
@@ -54,8 +67,8 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 <script type="text/javascript" src="js/who.js"></script>
 <script>
 	var pandemic = new who();
-	var svg = pandemic.Initialize();
 </script>
+<script type="text/javascript" src="js/control-panel.js"></script>
 
 </body>
 </html>

@@ -5,6 +5,8 @@ var who = function() {
 	this.svg = null;
 	this.population = []; // global array representing balls
 
+	this.tickCount = 0;
+
 	// data
 	this.infected = 0;
 	this.dead = 0;
@@ -12,9 +14,9 @@ var who = function() {
 
 	// control panel:
 	this.mortality = 0.05;
-	this.cureChance = 0.2;
-	this.hospitalCapacity = 30;
-	this.quarantineLevel = 0.1;
+	this.cureChance = 0.75;
+	this.hospitalCapacity = 0;
+	this.quarantineLevel = 0;
 
 	// r:
 	this.rArr = [];
@@ -83,15 +85,6 @@ var who = function() {
 				this.MovingCollision(ball1, ball2);
 			}
 
-			//ensure one ball is not inside others. distant apart till not colliding
-			while (this.CheckCollision(ball1, ball2)) {
-				ball1.posX += ball1.vx;
-				ball1.posY += ball1.vy;
-
-				ball2.posX += ball2.vx;
-				ball2.posY += ball2.vy;
-			}
-
 			this.collisionStatus(ball1, ball2);
 
 			ball1.Draw();
@@ -100,6 +93,7 @@ var who = function() {
 	}
 
 	this.tick = () => {
+		this.tickCount ++;
 		for (var i = 0; i < this.population.length; ++i) {
 			this.population[i].Move();
 			for (var j = i + 1; j < this.population.length; ++j) {
@@ -108,16 +102,22 @@ var who = function() {
 			this.processStatus(this.population[i]);
 		}
 		this.updateData();
-		if(this.infected == 0) return true;
+		if(this.infected == 0) return this.over();
 		return !this.running; // return true to stop
+	}
+	this.over = () => {
+		reset();
+		return true;
 	}
 
 	this.stop = () => {
 		this.running = false;
+		setPlay();
 	}
 	this.start = () => {
 		d3.timer(this.tick, 500);
 		this.running = true;
+		setPause();
 	}
 	this.StartStopGame = () => {
 		if(this.running) this.stop();
@@ -126,8 +126,9 @@ var who = function() {
 
 
 
-	// process status:
 
+
+	// process status
 	this.transmit = (sick, healthy) => {
 		healthy.infect();
 		sick.infectionSpread++;
@@ -146,52 +147,72 @@ var who = function() {
 
 	this.processStatus = (person) => {
 		if(person.status != "i") return;
-		this.rArr[person.id] = person.infectionSpread;
 
 		let ticks = person.ticksSinceInfection;
 		if(ticks < 500) return false;
-		if(ticks % 10 != 0) return false; // when to check?
+		if(ticks % 50 != 0) return false; // when to check?
 
-		let chanceToDie = 0;
-		if( this.hospitalUse < 0.75 ) {
-			chanceToDie = this.hospitalUse * this.mortality;
+		this.rArr[person.id] = person.infectionSpread;
+
+		this.hospitalize(person, ticks);
+	}
+	this.hospitalize = (person, ticks) => {
+		if( this.hospitalUse > 1 ) {
+			let chanceToDie = (this.hospitalUse - 1) * 2;
+			if(person.privilege) chanceToDie = chanceToDie / 2;
+			console.info("chance of " + person.id + " to die = " + chanceToDie);
+			if(this.probability(chanceToDie)) {
+				this.kill(person);
+				return;
+			}
 		} else {
-			chanceToDie = this.hospitalUse * this.mortality * 2;
-		}
-//		console.info("chance of " + person.id + " to die: ", chanceToDie);
-		if(this.probability(chanceToDie)) {
-			this.infected --;
-			this.dead ++;
-			person.die();
-		}
+			let chanceToCure = ( ticks - 500 ) / 100 * this.cureChance;
 
-		let chanceToCure = ( ticks / 10 - 45) / 100 * this.cureChance;
-
-		if(this.probability(chanceToCure)) {
-			this.infected --;
-			this.cured ++;
-			person.cure();
-		}		
+			if(this.probability(chanceToCure)) {
+				if(person.willDie) this.kill(person);
+				else this.cure(person)
+			}
+		}
+	}
+	this.kill = (person) => {
+		this.infected --;
+		this.dead ++;
+		person.die();
+	}
+	this.cure = (person) => {
+		this.infected --;
+		this.cured ++;
+		person.cure();
 	}
 
 
 
 
 
-
 	// data
+	this.calculateRZero = () => {
+		let zeroArray = Object.values(this.rArr);
+		if(zeroArray.length == 0) {
+			document.getElementById("rzero").innerHTML = "N/A";
+			return;
+		}
+		let rzero = zeroArray.reduce((a,b) => a + b, 0) / zeroArray.length;
+		if(rzero > this.r0) {
+			this.r0 = rzero;
+			document.getElementById("rzero").innerHTML = rzero.toFixed(2);
+		}
+	}
 	this.updateData = () => {
+		document.getElementById("day").innerHTML = Math.round(this.tickCount / 50);
 		document.getElementById("infectCount").innerHTML = this.infected;
 		document.getElementById("deathCount").innerHTML = this.dead;
 		document.getElementById("cureCount").innerHTML = this.cured;
 
-		let zeroArray = Object.values(this.rArr);
-		let rzero = zeroArray.reduce((a,b) => a + b, 0) / zeroArray.length;
-		document.getElementById("rzero").innerHTML = rzero.toFixed(2);
+		this.calculateRZero();
 
 		document.getElementById("mortality").innerHTML = (this.mortality * 100) + "%";
 		let hospitalCapacityPerson = 200 * this.hospitalCapacity / 100;
-		this.hospitalUse = this.infected / hospitalCapacityPerson;
+		this.hospitalUse = this.infected / hospitalCapacityPerson / 100;
 		document.getElementById("hospitalUse").innerHTML = Math.round(this.hospitalUse * 100) + "%";
 	}
 
@@ -217,9 +238,14 @@ var who = function() {
 		this.population[rand-1].infect();
 		this.infected ++;
 	}
-
+	this.createPerson = (p) => {
+		if(this.probability(this.quarantineLevel)) p.quarantine();
+		if(this.probability(this.mortality)) p.willDie = true;
+		if(this.probability(this.cureChance/2)) p.privilege = true;
+		return p
+	}
 	this.populate = () => {
-		const rowOfBalls = (row) => {
+		let rowOfBalls = (row) => {
 			let minh = (row-1)*59 + 5;
 			if(row == 10) minh -= 5;
 
@@ -229,8 +255,7 @@ var who = function() {
 				let h = minh + this.getRandom(60);
 				let w = (i-1) * 40 + this.getRandom(25);
 				let p = new Person(this.svg, w+5, h, 'n' + (i + pid), this.getRandom(360));
-				if(this.probability(this.quarantineLevel)) p.quarantine();
-				this.population.push(p);
+				this.population.push(this.createPerson(p));
 			}
 		}
 
@@ -240,7 +265,12 @@ var who = function() {
 
 		for (var i = 0; i < this.population.length; ++i) {
 			for (var j = i + 1; j < this.population.length; ++j) {
-				this.ProcessCollision(i, j);
+				let ball1 = this.population[i];
+				let ball2 = this.population[j];
+				if(this.CheckCollision(ball1, ball2)) {
+					ball1.posY -= 10;
+					ball1.Draw();
+				}
 			}
 		}
 
@@ -287,12 +317,30 @@ var who = function() {
 				});
 	}
 
-	this.Initialize = () => {
-		this.svg = this.createCanvas();
+
+	this.removeAllBalls = () => {
+		for (var i = 0; i < this.population.length; ++i) {
+			this.population[i].getBall().remove();
+		}
+		this.population = [];
+	}
+
+	this.reset = () => {
+		this.removeAllBalls();
+		this.tickCount = 0;
+		this.infected = 0;
+		this.dead = 0;
+		this.cured = 0;
+		this.r0 = 0;
+		this.rArr = [];
 
 		this.populate();
-		this.keyboard();
+		this.updateData();
+	}
 
+	this.Initialize = () => {
+		this.svg = this.createCanvas();
+		this.populate();
 		this.updateData();
 
 		window.onbeforeunload = function (e) {

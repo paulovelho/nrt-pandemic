@@ -12,10 +12,13 @@ function Person(svg, x, y, id, aoa) {
 	this.radius = this.weight;
 
 	this.status = "n";
-	// n = "normal" | i = "infected" | d = "dead" | c = "cure"
+	// n = "normal" | i = "infected" | "s" = "sick" | d = "dead" | c = "cure"
 	this.infectionSpread = 0;
 	this.ticksSinceInfection = 0;
 	this.moving = true;
+
+	this.willDie = false;
+	this.privilege = false;
 
 	// **** aoa is used only here -- earlier I was using to next move position.
 	// Now aoa and speed together is velocity 
