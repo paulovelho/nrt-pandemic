@@ -169,7 +169,7 @@ var who = function() {
 	this.progressDisesase = (person, ticks) => {
 		if(this.incubationPeriod == 0) return true;
 		let daysSinceDisease = ticks / this.ticksPerDay;
-		if( daysSinceDisease < this.incubationPeriod ) {
+		if( daysSinceDisease <= this.incubationPeriod ) {
 			return this.probability(0.2);
 		}
 		if(daysSinceDisease > 4){
