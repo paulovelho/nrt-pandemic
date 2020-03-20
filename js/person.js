@@ -13,9 +13,11 @@ function Person(svg, x, y, id, aoa) {
 
 	this.status = "n";
 	// n = "normal" | i = "infected" | a = "assintomatico" | "s" = "sick" | d = "dead" | c = "cure"
+	this.bumps = 0;
 	this.infectionSpread = 0;
 	this.ticksSinceStatus = 0;
 	this.moving = true;
+	this.selected = false;
 
 	this.willDie = false;
 	this.privilege = false;
@@ -103,21 +105,46 @@ function Person(svg, x, y, id, aoa) {
 	}
 
 	this.getInfo = () => {
-		return `<b>${this.id}</b><br/>
-			<i style="color: ${this.getColor()}">${this.getStatusStr()}</i><br/>
-			<p>R0 = ${this.infectionSpread} | em ${this.ticksSinceStatus} ticks</p>`;
+		let tickInfo = ";"
+		if(this.status == "i" || this.status == "s") {
+			tickInfo = ` há ${Math.round(this.ticksSinceStatus / pandemic.ticksPerDay)} dias`;
+		}
+		return `<b>indivíduo ${this.id}</b><br/>
+			<i style="color: ${this.getColor()}">${this.getStatusStr()}</i>${tickInfo}<br/>
+			${this.bumps} encontros >> ${this.infectionSpread} contágios transmitidos`;
 	}
 	this.showInfo = () => {
 		document.getElementById("data-debug").innerHTML = this.getInfo();
 	}
+	this.clickFn = () => {
+		pandemic.ballClick();
+		this.selected = true;
+		this.Draw();
+	}
+	this.unSelect = () => {
+		this.selected = false;
+		let ball = this.getBall();
+		ball.style("stroke-width", 0);
+		return this;
+	}
 
 	this.Draw = () => {
 		var ball = this.getBall();
+		let ballClass = this.selected ? 'ball-selected' : 'ball';
 		ball.enter()
 			.append("circle")
-			.attr({"id" : this.id, 'class' : 'ball', 'r' : this.radius, 'weight' : this.weight})
+			.attr({
+				'id': this.id, 
+				'r': this.radius, 
+				'weight': this.weight,
+				'class': ballClass
+			})
 			.style("fill", this.getColor())
-			.on("click", this.showInfo);
+			.on("click", this.clickFn);
+		if(this.selected) {
+			ball.style("stroke-width", 2).style("stroke", "blue");
+			this.showInfo();
+		}
 		ball.attr("cx", this.posX).attr("cy", this.posY);
 	}
 

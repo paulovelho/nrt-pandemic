@@ -4,6 +4,7 @@ var who = function() {
 
 	this.svg = null;
 	this.population = []; // global array representing balls
+	this.selected = null;
 
 	// 1 day = 50 ticks
 	this.ticksPerDay = 50;
@@ -11,12 +12,14 @@ var who = function() {
 
 	// data
 	this.infected = 0;
+	this.sicks = 0;
 	this.dead = 0;
 	this.cured = 0;
+	this.infectedTotal = 0;
 
 	// control panel:
 	this.mortality = 0.05;
-	this.cureChance = 0;
+	this.cureChance = 0.7;
 	this.incubationPeriod = 3;
 	this.hospitalCapacity = 0;
 	this.quarantineLevel = 0;
@@ -80,6 +83,8 @@ var who = function() {
 		ball2 = this.population[ball2];
 
 		if ( this.CheckCollision(ball1, ball2) ) {
+			ball1.bumps ++;
+			ball2.bumps ++;
 			if(!ball1.moving) {
 				this.StaticCollision(ball1, ball2);
 			} else if (!ball2.moving) {
@@ -110,6 +115,7 @@ var who = function() {
 	}
 	this.over = () => {
 		reset();
+		this.running = false;
 		return true;
 	}
 
@@ -133,12 +139,15 @@ var who = function() {
 
 	// process status
 	this.transmit = (sick, healthy) => {
-		if(this.incubationPeriod == 0)
+		if(this.incubationPeriod == 0){
+			this.sicks++;
 			healthy.sick();
-		else
+		} else{
 			healthy.infect();
+		}
 		sick.infectionSpread++;
 		this.infected++;
+		this.infectedTotal++;
 	}
 
 	this.collisionStatus = (p1, p2) => {
@@ -158,12 +167,19 @@ var who = function() {
 		this.rArr[person.id] = person.infectionSpread;
 
 		if( person.status == "i" ) {
-			if( this.progressDisesase(person, ticks) )
+			if( this.progressDisesase(person, ticks) ) {
+				this.sicks++;
 				person.sick();
+			}
 		}
 		if( person.status == "s" ) {
 			if(ticks < 500) return false;	
 			this.hospitalize(person, ticks);
+		}
+		if( person.status == "a" ) {
+			if(ticks > this.incubationPeriod) {
+				if(this.probability(this.cureChance)) this.cure(person);
+			}
 		}
 	}
 	this.progressDisesase = (person, ticks) => {
@@ -172,8 +188,9 @@ var who = function() {
 		if( daysSinceDisease <= this.incubationPeriod ) {
 			return this.probability(0.2);
 		}
-		if(daysSinceDisease > 4){
-			person.status = "a";
+		if(daysSinceDisease > this.incubationPeriod){
+			if(this.probability(0.4))
+				person.status = "a";
 			return false;
 		}
 		let chanceToProgress = 0.5 + daysSinceDisease * 0.1;
@@ -184,14 +201,14 @@ var who = function() {
 		if( this.hospitalUse > 1 ) {
 			let chanceToDie = (this.hospitalUse - 1) * 2;
 			if(person.privilege) chanceToDie = chanceToDie / 2;
-			console.info("chance of " + person.id + " to die = " + chanceToDie);
+//			console.info("chance of " + person.id + " to die = " + chanceToDie);
 			if(this.probability(chanceToDie)) {
 				this.kill(person);
 				return;
 			}
 		} else {
 			let chanceToCure = ( ticks - 500 ) / 100 * this.cureChance;
-
+//			console.info("chance of " + person.id + " to cure = " + chanceToCure);
 			if(this.probability(chanceToCure)) {
 				if(person.willDie) this.kill(person);
 				else this.cure(person)
@@ -200,10 +217,12 @@ var who = function() {
 	}
 	this.kill = (person) => {
 		this.infected --;
+		this.sicks --;
 		this.dead ++;
 		person.die();
 	}
 	this.cure = (person) => {
+		if(person.status == "s") this.sicks --;
 		this.infected --;
 		this.cured ++;
 		person.cure();
@@ -225,19 +244,27 @@ var who = function() {
 			this.r0 = rzero;
 			document.getElementById("rzero").innerHTML = rzero.toFixed(2);
 		}
+		return rzero;
 	}
 	this.updateData = () => {
 		document.getElementById("day").innerHTML = Math.round(this.tickCount / this.ticksPerDay);
-		document.getElementById("infectCount").innerHTML = this.infected;
-		document.getElementById("deathCount").innerHTML = this.dead;
-		document.getElementById("cureCount").innerHTML = this.cured;
+		let censo = `Infectados: ${this.infected}<br>
+			Doentes: ${this.sicks}<br>
+			Mortos: ${this.dead}<br>
+			Curados: ${this.cured}<br>`;
+		document.getElementById("data-censo").innerHTML = censo;
 
 		this.calculateRZero();
 
 		document.getElementById("mortality").innerHTML = (this.mortality * 100) + "%";
+		if(this.infectedTotal == 0) document.getElementById("realMortality").innerHTML = "N/A";
+		else document.getElementById("realMortality").innerHTML = (this.dead/this.infectedTotal * 100).toFixed(2) + "%";
+
 		let hospitalCapacityPerson = 200 * this.hospitalCapacity / 100;
 		this.hospitalUse = this.infected / hospitalCapacityPerson / 100;
-		document.getElementById("hospitalUse").innerHTML = Math.round(this.hospitalUse * 100) + "%";
+		let hospitalUsePerc = Math.round(this.hospitalUse * 100);
+		let hospitalUseStr = (this.hospitalUse > 1) ? `<b>${hospitalUsePerc} %</b>` : hospitalUsePerc + "%"
+		document.getElementById("hospitalUse").innerHTML = hospitalUseStr;
 	}
 
 
@@ -259,7 +286,10 @@ var who = function() {
 	// setup
 	this.infectRandom = () => {
 		let rand = this.getRandom(199);
-		this.population[rand-1].infect();
+		if(this.incubationPeriod == 0)
+			this.population[rand-1].sick();
+		else
+			this.population[rand-1].infect();
 		this.infected ++;
 	}
 	this.createPerson = (p) => {
@@ -303,6 +333,9 @@ var who = function() {
 		for (var i = 0; i < this.population.length; ++i) {
 			this.population[i].Draw();
 		}
+	}
+	this.ballClick = () => {
+		this.population.filter(p => p.selected).map(p => p.unSelect());
 	}
 	this.createCanvas = () => {
 		const containerId = "drawArea";
@@ -353,7 +386,9 @@ var who = function() {
 		this.removeAllBalls();
 		this.tickCount = 0;
 		this.infected = 0;
+		this.infectedTotal = 0;
 		this.dead = 0;
+		this.sicks = 0;
 		this.cured = 0;
 		this.r0 = 0;
 		this.rArr = [];

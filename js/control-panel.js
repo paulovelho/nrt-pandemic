@@ -3,18 +3,21 @@ var setupVisible = true;
 
 function quarantineUpdate(val) {
 	document.getElementById("quarantine").value = val;
+	document.getElementById("btn-play").disabled = true;
 	
 	document.getElementById("quarantineLevel").innerHTML = val + "%";
 	pandemic.quarantineLevel = val/100;
 }
 function hospitalUpdate(val) {
 	document.getElementById("hospital").value = val;
+	document.getElementById("btn-play").disabled = true;
 
 	document.getElementById("hospitalLevel").innerHTML = val + "%";
 	pandemic.hospitalCapacity = val/100;
 }
 function incubationUpdate(val) {
 	document.getElementById("incubation").value = val;
+	document.getElementById("btn-play").disabled = true;
 
 	document.getElementById("incubationLevel").innerHTML = val + " dias";
 	pandemic.incubationPeriod = val;
@@ -42,6 +45,7 @@ function setPlay() {
 
 
 function playPause() {
+	console.info("play pause..");
 	pandemic.StartStopGame();
 	if(setupVisible) {
 		disabled(true);
@@ -64,6 +68,9 @@ function OhNoes() {
 	hospitalUpdate(40);
 	incubationUpdate(4)
 	pandemic.Initialize();
+	window.setTimeout(() => {
+		document.getElementById("btn-play").disabled = false;
+	}, 500);
 }
 
 OhNoes();
