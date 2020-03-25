@@ -63,14 +63,65 @@ function reset() {
 }
 
 
-function OhNoes() {
+function Corona() {
 	quarantineUpdate(0);
 	hospitalUpdate(40);
-	incubationUpdate(4)
+	incubationUpdate(6);
+	pandemic.mortality = 0.05;
+	pandemic.timeToDie = 7;
+	pandemic.contaminationChance = 1;
+	pandemic.name = "Covid-19";
+}
+function H1N1() {
+	quarantineUpdate(0);
+	hospitalUpdate(40);
+	incubationUpdate(2);
+	pandemic.mortality = 0.01;
+	pandemic.timeToDie = 7;
+	pandemic.contaminationChance = 0.8;
+	pandemic.name = "H1N1 (2009)";
+}
+function Ebola() {
+	reset();
+	quarantineUpdate(0);
+	hospitalUpdate(40);
+	incubationUpdate(0)
+	pandemic.mortality = 0.30;
+	pandemic.timeToDie = 7;
+	pandemic.contaminationChance = 0.4;
+	pandemic.name = "Ebola (2014)";
+}
+
+
+function OhNoes() {
+	let disease = getParameterByName("case");
+	switch(disease) {
+		case "h1n1":
+			H1N1();
+			break;
+		case "ebola":
+			Ebola();
+			break;
+		case "covid":
+		default:
+			Corona();
+			break;
+	} 
 	pandemic.Initialize();
 	window.setTimeout(() => {
 		document.getElementById("btn-play").disabled = false;
 	}, 500);
+}
+
+
+function getParameterByName(name) {
+	let url = window.location.href;
+	name = name.replace(/[\[\]]/g, '\\$&');
+	var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+		results = regex.exec(url);
+	if (!results) return null;
+	if (!results[2]) return '';
+	return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
 
 OhNoes();

@@ -18,7 +18,10 @@ var who = function() {
 	this.infectedTotal = 0;
 
 	// control panel:
+	this.setupName = "Pandemia nRT";
 	this.mortality = 0.05;
+	this.timeToDie = 6;
+	this.contaminationChance = 1;
 	this.cureChance = 0.7;
 	this.incubationPeriod = 3;
 	this.hospitalCapacity = 0;
@@ -52,7 +55,6 @@ var who = function() {
 		} else {
 			moving.aoa = Math.PI - moving.aoa;
 		}
-//		moving.aoa = Math.PI - moving.aoa;
 		moving.vx = -moving.vx;
 		moving.vy = -moving.vy;
 	}
@@ -139,6 +141,7 @@ var who = function() {
 
 	// process status
 	this.transmit = (sick, healthy) => {
+		if(this.probability(1 - this.contaminationChance)) return false;
 		if(this.incubationPeriod == 0){
 			this.sicks++;
 			healthy.sick();
@@ -173,7 +176,7 @@ var who = function() {
 			}
 		}
 		if( person.status == "s" ) {
-			if(ticks < 500) return false;	
+			if(ticks < this.timeToDie * this.ticksPerDay) return false;	
 			this.hospitalize(person, ticks);
 		}
 		if( person.status == "a" ) {
@@ -246,17 +249,26 @@ var who = function() {
 		}
 		return rzero;
 	}
-	this.updateData = () => {
+	this.censo = () => {
 		document.getElementById("day").innerHTML = Math.round(this.tickCount / this.ticksPerDay);
 		let censo = `Infectados: ${this.infected}<br>
 			Doentes: ${this.sicks}<br>
 			Mortos: ${this.dead}<br>
 			Curados: ${this.cured}<br>`;
 		document.getElementById("data-censo").innerHTML = censo;
-
+	}
+	this.setupData = () => {
+		let setup = `<b>${this.name}</b><br>
+			Mortalidade Nominal: ${this.mortality * 100}%<br>
+			Chance de Transmissão: ${this.contaminationChance * 100}%<br>
+			Tempo de Incubação: ${this.incubationPeriod} dias<br>
+			Morte em: ${this.timeToDie} dias<br>`;
+		document.getElementById("data-setup").innerHTML = setup;
+	}
+	this.updateData = () => {
+		this.censo();
 		this.calculateRZero();
 
-		document.getElementById("mortality").innerHTML = (this.mortality * 100) + "%";
 		if(this.infectedTotal == 0) document.getElementById("realMortality").innerHTML = "N/A";
 		else document.getElementById("realMortality").innerHTML = (this.dead/this.infectedTotal * 100).toFixed(2) + "%";
 
@@ -383,6 +395,7 @@ var who = function() {
 	}
 
 	this.reset = () => {
+		if(!this.svg) return;
 		this.removeAllBalls();
 		this.tickCount = 0;
 		this.infected = 0;
@@ -395,12 +408,14 @@ var who = function() {
 
 		this.populate();
 		this.updateData();
+		this.setupData();
 	}
 
 	this.Initialize = () => {
 		this.svg = this.createCanvas();
 		this.populate();
 		this.updateData();
+		this.setupData();
 
 		window.onbeforeunload = function (e) {
 			this.stop();
