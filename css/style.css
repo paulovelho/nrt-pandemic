@@ -2,6 +2,18 @@
 	margin-top: 20px;
 }
 
+span.census::before {
+  content: "•"; 
+  font-size: 2rem;
+  padding-right: 5px;
+  line-height: 0.5rem;
+  vertical-align:middle;
+}
+span.c-infected::before { color: #F9F; }
+span.c-sick::before { color: red; }
+span.c-dead::before { color: #000; }
+span.c-cured::before { color: green; }
+
 
 .slider {
   -webkit-appearance: none;

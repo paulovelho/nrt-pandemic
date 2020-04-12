@@ -251,10 +251,10 @@ var who = function() {
 	}
 	this.censo = () => {
 		document.getElementById("day").innerHTML = Math.round(this.tickCount / this.ticksPerDay);
-		let censo = `Infectados: ${this.infected}<br>
-			Doentes: ${this.sicks}<br>
-			Mortos: ${this.dead}<br>
-			Curados: ${this.cured}<br>`;
+		let censo = `<span class="census c-infected">Infectados: ${this.infected}</span><br>
+			<span class="census c-sick">Doentes: ${this.sicks}</span><br>
+			<span class="census c-dead">Mortos: ${this.dead}</span><br>
+			<span class="census c-cured">Curados: ${this.cured}</span><br>`;
 		document.getElementById("data-censo").innerHTML = censo;
 	}
 	this.setupData = () => {
